@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Accountability Lock",
+  "version": "1.0.0",
+  "description": "Limit your time on distraction websites and unlock them with a friend's help (TOTP).",
+  "permissions": [
+    "tabs",
+    "storage",
+    "alarms",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "src/pages/popup/popup.html",
+    "default_icon": {
+      "16": "src/icons/icon16.png",
+      "48": "src/icons/icon48.png",
+      "128": "src/icons/icon128.png"
+    }
+  },
+  "options_ui": {
+    "page": "src/pages/options/options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "src/icons/icon16.png",
+    "48": "src/icons/icon48.png",
+    "128": "src/icons/icon128.png"
+  }
+}

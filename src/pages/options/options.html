@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accountability Settings</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --primary: #8b5cf6;
+            --text: #f8fafc;
+            --border: #334155;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        h1 {
+            margin: 0;
+            font-weight: 300;
+            letter-spacing: -1px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        /* Two columns */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button.secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: #94a3b8;
+        }
+
+        button.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 0.25rem 0.5rem;
+        }
+
+        input,
+        select {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 0.5rem;
+        }
+
+        #qrModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: white;
+            color: black;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        #qrCanvas {
+            margin: 1rem 0;
+        }
+
+        .secret-text {
+            font-family: monospace;
+            background: #eee;
+            padding: 0.5rem;
+            word-break: break-all;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Accountability Config</h1>
+    </div>
+
+    <div class="grid">
+        <!-- KEYS SECTION -->
+        <div>
+            <h2>1. Verification Keys</h2>
+            <div class="card">
+                <p style="font-size:0.9rem; color:#94a3b8">Create keys for your friends. They will get a QR code.</p>
+                <div id="keysList"></div>
+
+                <h3 style="font-size:1rem; margin-top:1.5rem">New Key</h3>
+                <input type="text" id="newKeyLabel" placeholder="Label (e.g. Mom 15m)">
+                <input type="number" id="newKeyDuration" placeholder="Duration (minutes)" value="15">
+                <button id="addKeyBtn" style="width:100%">Create Key</button>
+            </div>
+        </div>
+
+        <!-- SITES SECTION -->
+        <div>
+            <h2>2. Blocked Sites</h2>
+            <div class="card">
+                <div id="sitesList"></div>
+
+                <h3 style="font-size:1rem; margin-top:1.5rem">Block New Site</h3>
+                <input type="text" id="newSiteDomain" placeholder="example.com">
+                <input type="number" id="newSiteLimit" placeholder="Daily Limit (minutes)" value="30">
+
+                <label style="font-size:0.9rem; display:block; margin:0.5rem 0 0.25rem;">Allowed Keys (Hold Cmd/Ctrl to
+                    select multiple)</label>
+                <select id="keySelector" multiple style="height: 100px;">
+                    <!-- Populated by JS -->
+                </select>
+
+                <button id="addSiteBtn" style="width:100%; margin-top:1rem;">Add Rule</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Modal -->
+    <div id="verifyModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); align-items:center; justify-content:center; z-index:100;">
+        <div class="modal-content">
+            <h3>Confirm Deletion</h3>
+            <p id="verifyInstruction"></p>
+            <input type="text" id="verifyInput" maxlength="6" placeholder="000000"
+                style="text-align:center; font-size:1.5rem; letter-spacing:0.5rem; margin:1rem 0;">
+            <div id="verifyError" style="color:red; display:none; margin-bottom:1rem;">Invalid Code</div>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button id="cancelVerifyBtn" class="secondary">Cancel</button>
+                <button id="confirmVerifyBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div id="qrModal">
+        <div class="modal-content">
+            <h3>Scan with Authenticator</h3>
+            <div id="qrPlaceholder"></div>
+            <p>Secret Key:</p>
+            <div class="secret-text" id="modalSecretDisplay"></div>
+            <button id="closeQrModalBtn">Done</button>
+        </div>
+    </div>
+
+    <script src="../../lib/otpauth.min.js" type="module"></script>
+    <script src="../../lib/qrcode.min.js"></script>
+    <script type="module" src="options.js"></script>
+</body>
+
+</html>
